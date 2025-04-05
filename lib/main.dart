@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
-void main() {
+import 'package:geocoding/geocoding.dart';
+
+const supabaseUrl = 'https://wxsrvwglhxehoxjptuuz.supabase.co';
+const supabaseKey =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4c3J2d2dsaHhlaG94anB0dXV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM0MDk2MzEsImV4cCI6MjA1ODk4NTYzMX0.jErayHSGDcdaBwsIKPDz5iL7k2yj9B6FtM6JBrjfJQo';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+  final supabase = Supabase.instance.client;
+  final List<dynamic> response = await Supabase.instance.client
+      .from('test')
+      .select('id');
+
+  print(
+    "--------------------------------------------------------------------------------------------------",
+  );
+  print(response);
+
   runApp(FoodRescueApp());
 }
 
@@ -144,9 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       // User Type Icon
                       Icon(
-                        widget.userType == 'hotel' 
-                          ? Icons.hotel 
-                          : Icons.school,
+                        widget.userType == 'hotel' ? Icons.hotel : Icons.school,
                         size: 80,
                         color: Colors.green,
                       ),
@@ -211,7 +230,9 @@ class _LoginPageState extends State<LoginPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SignUpPage(userType: widget.userType),
+                              builder:
+                                  (context) =>
+                                      SignUpPage(userType: widget.userType),
                             ),
                           );
                         },
@@ -235,12 +256,18 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePage(userType: widget.userType, username: _username),
+          builder:
+              (context) =>
+                  HomePage(userType: widget.userType, username: _username),
         ),
       );
     }
   }
 }
+
+double? _latitude;
+double? _longitude;
+String _currentAddress = '';
 
 // Sign Up Page
 class SignUpPage extends StatefulWidget {
@@ -255,6 +282,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final Map<String, String> _signUpData = {};
+  String _currentAddress = "Tap to get location";
 
   @override
   Widget build(BuildContext context) {
@@ -282,17 +310,14 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // User Type Icon
                       Icon(
-                        widget.userType == 'hotel' 
-                          ? Icons.hotel 
-                          : Icons.school,
+                        widget.userType == 'hotel' ? Icons.hotel : Icons.school,
                         size: 80,
                         color: Colors.green,
                       ),
                       SizedBox(height: 20),
                       Text(
-                        '${widget.userType.capitalize()} Sign Up',
+                        '${widget.userType[0].toUpperCase()}${widget.userType.substring(1)} Sign Up',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -317,22 +342,42 @@ class _SignUpPageState extends State<SignUpPage> {
                         label: 'Mobile Number',
                         icon: Icons.phone,
                         keyboardType: TextInputType.phone,
-                        onSaved: (value) => _signUpData['mobileNo'] = value!,
+                        onSaved: (value) => _signUpData['mobileno'] = value!,
+                      ),
+                      SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: _getCurrentLocation,
+                        child: AbsorbPointer(
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              prefixIcon: Icon(Icons.location_on),
+                              labelText: 'Location',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _currentAddress,
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please get your location';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
                       ),
                       SizedBox(height: 20),
                       _buildTextFormField(
-                        label: 'Location',
-                        icon: Icons.location_on,
-                        onSaved: (value) => _signUpData['location'] = value!,
-                      ),
-                      SizedBox(height: 20),
-                      _buildTextFormField(
-                        label: widget.userType == 'orphanage' 
-                          ? 'Orphanage Name' 
-                          : 'Hotel Name',
-                        icon: widget.userType == 'orphanage' 
-                          ? Icons.school 
-                          : Icons.hotel,
+                        label:
+                            widget.userType == 'orphanage'
+                                ? 'Orphanage Name'
+                                : 'Hotel Name',
+                        icon:
+                            widget.userType == 'orphanage'
+                                ? Icons.school
+                                : Icons.hotel,
                         onSaved: (value) => _signUpData['name'] = value!,
                       ),
                       SizedBox(height: 20),
@@ -368,9 +413,7 @@ class _SignUpPageState extends State<SignUpPage> {
       decoration: InputDecoration(
         prefixIcon: Icon(icon),
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
       obscureText: obscureText,
       keyboardType: keyboardType,
@@ -384,6 +427,64 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Location services are disabled.")),
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Location permission is denied.")),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Location permission is permanently denied.")),
+        );
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      Placemark place = placemarks[0];
+
+      setState(() {
+        _currentAddress =
+            "${place.street}, ${place.locality}, ${place.country}";
+        _signUpData['latitude'] = position.latitude.toString();
+        _signUpData['longitude'] = position.longitude.toString();
+        print(
+          "---------------------------------------------------------------",
+        );
+        print(_signUpData['latitude']);
+        print(_signUpData['longitude']);
+        print(_signUpData);
+      });
+
+      _signUpData['location'] = _currentAddress;
+    } catch (e) {
+      print("Error getting location: $e");
+    }
+  }
+
   void _signUp() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -391,12 +492,47 @@ class _SignUpPageState extends State<SignUpPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomePage(
-            userType: widget.userType,
-            username: _signUpData['username']!,
-          ),
+          builder:
+              (context) => HomePage(
+                userType: widget.userType,
+                username: _signUpData['username']!,
+              ),
         ),
       );
+    }
+    print(
+      "------------------------------------------------------------------------------------------",
+    );
+    print(_signUpData);
+    // print(_currentAddress);
+    saveUserDataToSupabase();
+  }
+
+  Future<void> saveUserDataToSupabase() async {
+    var uuid = Uuid();
+    String userId = uuid.v4();
+    final Map<String, dynamic> data = {
+      'user_id': userId,
+      'username': _signUpData['username'],
+      'name': _signUpData['name'],
+      'mobileno': _signUpData['mobileno'],
+      'location': _signUpData['location'],
+      'latitude': _signUpData['latitude'],
+      'longitude': _signUpData['longitude'],
+      'password': _signUpData['password'],
+    };
+    try {
+      final response = await Supabase.instance.client
+          .from('orphanages')
+          .insert(_signUpData);
+
+      if (response.error == null) {
+        print('User data inserted successfully!');
+      } else {
+        print('Insert error: ${response.error!.message}');
+      }
+    } catch (e) {
+      print('Error saving data: $e');
     }
   }
 }
@@ -458,22 +594,10 @@ class _HomePageState extends State<HomePage> {
       body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'History'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.green,
@@ -491,32 +615,26 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              widget.userType == 'hotel' 
-                ? Icons.add_circle_outline 
-                : Icons.no_food_outlined,
+              widget.userType == 'hotel'
+                  ? Icons.add_circle_outline
+                  : Icons.no_food_outlined,
               size: 100,
               color: Colors.green.shade300,
             ),
             SizedBox(height: 20),
             Text(
               widget.userType == 'hotel'
-                ? 'Add your first food donation'
-                : 'No food donations available',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.green.shade600,
-              ),
+                  ? 'Add your first food donation'
+                  : 'No food donations available',
+              style: TextStyle(fontSize: 18, color: Colors.green.shade600),
             ),
-            if (widget.userType == 'hotel')
-              SizedBox(height: 20),
+            if (widget.userType == 'hotel') SizedBox(height: 20),
             if (widget.userType == 'hotel')
               ElevatedButton.icon(
                 onPressed: _addFoodItem,
                 icon: Icon(Icons.add),
                 label: Text('Add Food Item'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               ),
           ],
         ),
