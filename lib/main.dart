@@ -249,19 +249,60 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       // TODO: Add authentication logic
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) =>
-                  HomePage(userType: widget.userType, username: _username),
-        ),
-      );
+      final supabase = Supabase.instance.client;
+
+      try {
+        final response =
+            await supabase
+                .from(widget.userType)
+                .select()
+                .eq('username', _username)
+                .eq('password', _password)
+                .maybeSingle(); // returns null if not found, avoids crash
+
+        print("Query Result: $response");
+
+        if (response != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      HomePage(userType: widget.userType, username: _username),
+            ),
+          );
+        } else {
+          _showError('Invalid username or password.');
+        }
+      } on PostgrestException catch (e) {
+        print("PostgrestException: ${e.message}");
+        _showError('Login failed: ${e.message}');
+      } catch (e) {
+        print("Unknown error: $e");
+        _showError('An error occurred. Please try again.');
+      }
     }
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Login Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                child: Text('OK'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+    );
   }
 }
 
@@ -272,6 +313,7 @@ String _currentAddress = '';
 // Sign Up Page
 class SignUpPage extends StatefulWidget {
   final String userType;
+  String tablename = "";
 
   SignUpPage({required this.userType});
 
@@ -500,10 +542,12 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       );
     }
+
     print(
       "------------------------------------------------------------------------------------------",
     );
     print(_signUpData);
+
     // print(_currentAddress);
     saveUserDataToSupabase();
   }
@@ -521,10 +565,17 @@ class _SignUpPageState extends State<SignUpPage> {
       'longitude': _signUpData['longitude'],
       'password': _signUpData['password'],
     };
+    String tableName = widget.userType == 'orphanage' ? 'orphanage' : 'hotel';
     try {
       final response = await Supabase.instance.client
-          .from('orphanages')
-          .insert(_signUpData);
+          .from(tableName)
+          .insert(data);
+      print(
+        "----------------------------------------------------------------------------",
+      );
+      print(data);
+      print(data['latitude']);
+      print(data['longitude']);
 
       if (response.error == null) {
         print('User data inserted successfully!');
