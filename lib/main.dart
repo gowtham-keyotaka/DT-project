@@ -4,8 +4,9 @@ import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
-
 import 'package:geocoding/geocoding.dart';
+import 'package:location/location.dart' as location;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 const supabaseUrl = 'https://wxsrvwglhxehoxjptuuz.supabase.co';
 const supabaseKey =
@@ -588,7 +589,6 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
-// Home Page
 class HomePage extends StatefulWidget {
   final String userType;
   final String username;
@@ -603,24 +603,29 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<FoodItem> foodItems = [];
   int _selectedIndex = 0;
+  GoogleMapController? _mapController;
+  LatLng _currentPosition = const LatLng(20.5937, 78.9629); // Default to India
+  final Set<Marker> _markers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
-    // TODO: Implement navigation logic for different bottom nav items
     switch (index) {
-      case 0: // Home
-        // Already on home page
-        break;
-      case 1: // Messages
+      case 1:
         _showUnimplementedFeature('Messages');
         break;
-      case 2: // History
+      case 2:
         _showUnimplementedFeature('History');
         break;
-      case 3: // Profile
+      case 3:
         _showUnimplementedFeature('Profile');
         break;
     }
@@ -630,6 +635,38 @@ class _HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$featureName feature coming soon!')),
     );
+  }
+
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      setState(() {
+        _currentPosition = LatLng(position.latitude, position.longitude);
+        _markers.add(
+          Marker(
+            markerId: const MarkerId('current_location'),
+            position: _currentPosition,
+            infoWindow: const InfoWindow(title: "You are here"),
+          ),
+        );
+      });
+
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(_currentPosition, 15),
+      );
+    }
   }
 
   @override
@@ -660,74 +697,77 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBody() {
-    if (foodItems.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              widget.userType == 'hotel'
-                  ? Icons.add_circle_outline
-                  : Icons.no_food_outlined,
-              size: 100,
-              color: Colors.green.shade300,
-            ),
-            SizedBox(height: 20),
-            Text(
-              widget.userType == 'hotel'
-                  ? 'Add your first food donation'
-                  : 'No food donations available',
-              style: TextStyle(fontSize: 18, color: Colors.green.shade600),
-            ),
-            if (widget.userType == 'hotel') SizedBox(height: 20),
-            if (widget.userType == 'hotel')
-              ElevatedButton.icon(
-                onPressed: _addFoodItem,
-                icon: Icon(Icons.add),
-                label: Text('Add Food Item'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              ),
-          ],
-        ),
-      );
+    if (_selectedIndex != 0) {
+      return const Center(child: Text('Feature coming soon!'));
     }
-    return widget.userType == 'hotel' ? _hotelHomeView() : _orphanageHomeView();
-  }
 
-  Widget _hotelHomeView() {
-    return Column(
+    return Stack(
       children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: foodItems.length,
-            itemBuilder: (context, index) {
-              return FoodItemCard(foodItem: foodItems[index]);
-            },
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: _currentPosition,
+            zoom: 5,
           ),
+          onMapCreated: (controller) => _mapController = controller,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
+          markers: _markers,
         ),
+        if (widget.userType == 'hotel' && foodItems.isEmpty)
+          _buildEmptyHotelView(),
+        if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
+          _orphanageHomeView(),
       ],
     );
   }
 
-  Widget _orphanageHomeView() {
+  Widget _buildEmptyHotelView() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            'Available Food Donations',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Icon(
+            Icons.add_circle_outline,
+            size: 100,
+            color: Colors.green.shade300,
           ),
           const SizedBox(height: 20),
-          Expanded(
-            child: ListView.builder(
-              itemCount: foodItems.length,
-              itemBuilder: (context, index) {
-                return FoodItemCard(foodItem: foodItems[index]);
-              },
-            ),
+          Text(
+            'Add your first food donation',
+            style: TextStyle(fontSize: 18, color: Colors.green.shade600),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _addFoodItem,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Food Item'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _orphanageHomeView() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        color: Colors.white.withOpacity(0.9),
+        height: 200,
+        child: ListView.builder(
+          itemCount: foodItems.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(foodItems[index].name),
+              subtitle: Text('Quantity: ${foodItems[index].quantity}'),
+              onTap: () {
+                // Zoom to food item's location (if available)
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -741,6 +781,7 @@ class _HomePageState extends State<HomePage> {
     if (newItem != null) {
       setState(() {
         foodItems.add(newItem);
+        // Optionally add a marker for the new item if it has location
       });
     }
   }
