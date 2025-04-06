@@ -801,6 +801,7 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
   TextEditingController foodNameController = TextEditingController();
   TextEditingController expiryDateController = TextEditingController();
   TextEditingController quantityController = TextEditingController();
+  TextEditingController delevaryController = TextEditingController();
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -898,6 +899,21 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
                 },
               ),
               const SizedBox(height: 20),
+              // Food Name
+              TextFormField(
+                controller: delevaryController,
+                decoration: const InputDecoration(
+                  labelText: 'Delivary',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter Delivary details';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
 
               // Save Button
               ElevatedButton(
@@ -911,16 +927,62 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
     );
   }
 
-  void _saveFoodItem() {
+  void _saveFoodItem() async {
     if (_formKey.currentState!.validate()) {
-      final newFoodItem = FoodItem(
-        name: foodNameController.text,
-        expiryDate: expiryDateController.text,
-        quantity: int.parse(quantityController.text),
-        image: _imageFile,
-      );
+      final uuid = const Uuid().v4(); // unique ID for image file
+      String? imageUrl;
 
-      Navigator.pop(context, newFoodItem);
+      try {
+        // Upload Image to Supabase Storage
+        if (_imageFile != null) {
+          final imageBytes = await _imageFile!.readAsBytes();
+          final imageExt = _imageFile!.path.split('.').last;
+          final imagePath = 'food_image/$uuid.$imageExt';
+
+          final storageResponse = await Supabase.instance.client.storage
+              .from('food-image') // your Supabase bucket name
+              .uploadBinary(imagePath, imageBytes);
+
+          if (storageResponse.isEmpty) {
+            throw Exception('Image upload failed.');
+          }
+
+          // Get public URL
+          final imagePublicUrl = Supabase.instance.client.storage
+              .from('food-image')
+              .getPublicUrl(imagePath);
+
+          imageUrl = imagePublicUrl;
+          print(imageUrl);
+        }
+
+        // Insert into Supabase Database
+        final response = await Supabase.instance.client
+            .from('food_items')
+            .insert({
+              'name': foodNameController.text,
+              'expiry_date': expiryDateController.text,
+              'quantity': int.parse(quantityController.text),
+              'delivary': delevaryController.text,
+              'image_url': imageUrl,
+            });
+
+        if (response.error != null) {
+          throw Exception(response.error!.message);
+        }
+
+        // Clear form and show success
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Food item added successfully!')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        print("------------------------------------------");
+        print('error$e');
+      }
     }
   }
 }
@@ -930,12 +992,14 @@ class FoodItem {
   final String name;
   final String expiryDate;
   final int quantity;
+  final String delivary;
   final File? image;
 
   FoodItem({
     required this.name,
     required this.expiryDate,
     required this.quantity,
+    required this.delivary,
     this.image,
   });
 }
