@@ -123,6 +123,12 @@ class UserTypeSelectionPage extends StatelessWidget {
   }
 }
 
+class UserData {
+  static String userId = '';
+  static String username = '';
+  static String userType = '';
+}
+
 // Login Page
 class LoginPage extends StatefulWidget {
   final String userType;
@@ -269,7 +275,9 @@ class _LoginPageState extends State<LoginPage> {
         print("Query Result: $response");
 
         if (response != null) {
-          get_user_id();
+          UserData.userId = response['user_id'];
+          UserData.username = _username;
+          UserData.userType = widget.userType;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -733,9 +741,8 @@ class _HomePageState extends State<HomePage> {
           markers: _markers,
         ),
         if (widget.userType == 'hotel' && foodItems.isEmpty)
-        
-        if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
-          _orphanageHomeView(),
+          if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
+            _orphanageHomeView(),
       ],
     );
   }
@@ -816,6 +823,8 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
   final _formKey = GlobalKey<FormState>();
   File? _imageFile;
   final _picker = ImagePicker();
+  final user_id = UserData.userId;
+  final user_type = UserData.userType;
 
   TextEditingController foodNameController = TextEditingController();
   TextEditingController expiryDateController = TextEditingController();
@@ -947,6 +956,8 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
   }
 
   void _saveFoodItem() async {
+    print("-------------------------------------------------");
+    print(UserData.userId);
     if (_formKey.currentState!.validate()) {
       final uuid = const Uuid().v4(); // unique ID for image file
       String? imageUrl;
@@ -984,12 +995,13 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
               'quantity': int.parse(quantityController.text),
               'delivary': delevaryController.text,
               'image_url': imageUrl,
+              'user_id': user_id,
             });
-
+        /*
         if (response.error != null) {
           throw Exception(response.error!.message);
         }
-
+*/
         // Clear form and show success
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Food item added successfully!')),
