@@ -137,6 +137,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   String _username = '';
   String _password = '';
+  var _user_id;
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +269,7 @@ class _LoginPageState extends State<LoginPage> {
         print("Query Result: $response");
 
         if (response != null) {
+          get_user_id();
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -276,6 +278,8 @@ class _LoginPageState extends State<LoginPage> {
                       HomePage(userType: widget.userType, username: _username),
             ),
           );
+
+          print("User ID: ${response['user_id']}");
         } else {
           _showError('Invalid username or password.');
         }
@@ -287,6 +291,21 @@ class _LoginPageState extends State<LoginPage> {
         _showError('An error occurred. Please try again.');
       }
     }
+  }
+
+  void get_user_id() async {
+    final supabase = Supabase.instance.client;
+    _user_id =
+        await supabase
+            .from(widget.userType)
+            .select()
+            .eq('username', _username)
+            .eq('password', _password)
+            .maybeSingle();
+    print("--------------------------------");
+    print("user_id: $_user_id");
+    print(_user_id['user_id']);
+    print(_user_id);
   }
 
   void _showError(String message) {
@@ -714,7 +733,7 @@ class _HomePageState extends State<HomePage> {
           markers: _markers,
         ),
         if (widget.userType == 'hotel' && foodItems.isEmpty)
-          _buildEmptyHotelView(),
+        
         if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
           _orphanageHomeView(),
       ],
