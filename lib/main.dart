@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
+import 'dart:math';
 
 const supabaseUrl = 'https://wxsrvwglhxehoxjptuuz.supabase.co';
 const supabaseKey =
@@ -635,6 +636,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<FoodItem> foodItems = [];
+  List<Map<String, dynamic>> availableFoodItems = [];
   int _selectedIndex = 0;
   GoogleMapController? _mapController;
   LatLng _currentPosition = const LatLng(20.5937, 78.9629); // Default to India
@@ -648,7 +650,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _getCurrentLocation();
     _loadFoodItemsFromSupabase();
-    _loadUserData(); // Add this line
+    _loadUserData();
   }
 
   Future<void> _loadUserData() async {
@@ -665,7 +667,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadHotelData() async {
     try {
-      // Query hotel table using username
       final response =
           await Supabase.instance.client
               .from('hotel')
@@ -673,32 +674,29 @@ class _HomePageState extends State<HomePage> {
               .eq('username', widget.username)
               .single();
 
-      print('Hotel data response: $response'); // Debug print
+      print('Hotel data response: $response');
 
       setState(() {
         userPhone = response['phonenumber'];
-        // Hotels don't have email in your setup, so keep it null
         userEmail = null;
       });
 
-      print('Loaded hotel data - Phone: $userPhone'); // Debug print
+      print('Loaded hotel data - Phone: $userPhone');
     } catch (e) {
       print('Error loading hotel data: $e');
     }
   }
 
-  // Load data from orphanage table
   Future<void> _loadOrphanageData() async {
     try {
-      // Query orphanage table using the user ID from UserData
       final response =
           await Supabase.instance.client
               .from('orphanage')
               .select('user_id, email, phonenumber')
-              .eq('user_id', UserData.userId) // Using the logged in user ID
+              .eq('user_id', UserData.userId)
               .single();
 
-      print('Orphanage data response: $response'); // Debug print
+      print('Orphanage data response: $response');
 
       setState(() {
         userEmail = response['email'];
@@ -707,20 +705,77 @@ class _HomePageState extends State<HomePage> {
 
       print(
         'Loaded orphanage data - Email: $userEmail, Phone: $userPhone',
-      ); // Debug print
+      );
     } catch (e) {
       print('Error loading orphanage data: $e');
     }
   }
 
-  // Update your _onItemTapped method in the _HomePageState class:
+  Future<void> _loadAvailableFoodItems() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('food_items')
+          .select('name, expiry_date, quantity, delivary, image_url, user_id, latitude, longitude');
+
+      List<Map<String, dynamic>> items = List<Map<String, dynamic>>.from(response);
+      
+      // Calculate distance for each item and sort by nearest
+      for (var item in items) {
+        if (item['latitude'] != null && item['longitude'] != null) {
+          double lat = double.tryParse(item['latitude'].toString()) ?? 0.0;
+          double lng = double.tryParse(item['longitude'].toString()) ?? 0.0;
+          
+          double distance = _calculateDistance(
+            _currentPosition.latitude,
+            _currentPosition.longitude,
+            lat,
+            lng,
+          );
+          
+          item['distance'] = distance;
+        } else {
+          item['distance'] = double.infinity;
+        }
+      }
+
+      // Sort by distance (nearest first)
+      items.sort((a, b) => (a['distance'] ?? double.infinity).compareTo(b['distance'] ?? double.infinity));
+
+      setState(() {
+        availableFoodItems = items;
+      });
+
+      print('Loaded ${items.length} available food items');
+    } catch (e) {
+      print('Error loading available food items: $e');
+    }
+  }
+
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371; // Earth's radius in kilometers
+    
+    double dLat = _degreesToRadians(lat2 - lat1);
+    double dLon = _degreesToRadians(lon2 - lon1);
+    
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degreesToRadians(lat1)) * cos(_degreesToRadians(lat2)) *
+        sin(dLon / 2) * sin(dLon / 2);
+    
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = earthRadius * c;
+    
+    return distance;
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * (pi / 180);
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
     
-
     switch (index) {
       case 0:
         // Home - already handled in _buildBody()
@@ -729,24 +784,22 @@ class _HomePageState extends State<HomePage> {
         _showUnimplementedFeature('Messages');
         break;
       case 2:
-        _showUnimplementedFeature('History');
+        // Available Food - load food items when this tab is selected
+        _loadAvailableFoodItems();
         break;
       case 3:
         // Navigate to Profile Page
-
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) => ProfilePage(
-                  username: widget.username,
-                  userType: widget.userType,
-                  userEmail: userEmail, // Replace with actual email
-                  phoneNumber: userPhone, // Replace with actual phone
-                ),
+            builder: (context) => ProfilePage(
+              username: widget.username,
+              userType: widget.userType,
+              userEmail: userEmail,
+              phoneNumber: userPhone,
+            ),
           ),
         ).then((_) {
-          // Reset the selected index when returning from profile
           setState(() {
             _selectedIndex = 0;
           });
@@ -755,15 +808,26 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Also update your _buildBody method to handle the profile case:
-
   Widget _buildBody() {
-    // Only show the "Feature coming soon!" for Messages and History tabs
-    if (_selectedIndex == 1 || _selectedIndex == 2) {
-      return const Center(child: Text('Feature coming soon!'));
+    switch (_selectedIndex) {
+      case 0:
+        // Home - Show map
+        return _buildMapView();
+      case 1:
+        // Messages - Show coming soon
+        return const Center(child: Text('Messages feature coming soon!'));
+      case 2:
+        // Available Food - Show food list
+        return _buildAvailableFoodView();
+      case 3:
+        // Profile is handled by navigation, so this shouldn't be reached
+        return _buildMapView();
+      default:
+        return _buildMapView();
     }
+  }
 
-    // For Home (index 0) and Profile (index 3), show the map
+  Widget _buildMapView() {
     return Stack(
       children: [
         GoogleMap(
@@ -776,15 +840,291 @@ class _HomePageState extends State<HomePage> {
           myLocationButtonEnabled: true,
           markers: _markers,
         ),
-        
-        
         if (widget.userType == 'hotel' && foodItems.isEmpty)
           // _buildEmptyHotelView(), // Uncomment when you want to use this
-          if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
-            _orphanageHomeView(),
+          Container(),
+        if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
+          _orphanageHomeView(),
       ],
     );
   }
+
+  Widget _buildAvailableFoodView() {
+    if (availableFoodItems.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.restaurant, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No food items available',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Check back later for available food donations',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadAvailableFoodItems,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: availableFoodItems.length,
+        itemBuilder: (context, index) {
+          final item = availableFoodItems[index];
+          return _buildFoodItemCard(item);
+        },
+      ),
+    );
+  }
+
+  Widget _buildFoodItemCard(Map<String, dynamic> item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () =>  _showAvailableFoodItemDetails(item),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Food Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: item['image_url'] != null && item['image_url'].isNotEmpty
+                    ? Image.network(
+                        item['image_url'],
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.restaurant, color: Colors.grey),
+                          );
+                        },
+                      )
+                    : Container(
+                        width: 80,
+                        height: 80,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.restaurant, color: Colors.grey),
+                      ),
+              ),
+              const SizedBox(width: 16),
+              // Food Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name'] ?? 'Unknown Food',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Quantity: ${item['quantity'] ?? 'Not specified'}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Expires: ${item['expiry_date'] ?? 'Not specified'}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (item['distance'] != null && item['distance'] != double.infinity)
+                      Text(
+                        'Distance: ${item['distance'].toStringAsFixed(1)} km',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        item['delivary'] ?? 'Pickup',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // _showFoodItemDetails method already exists in your code - use the existing one
+
+void _showAvailableFoodItemDetails(Map<String, dynamic> item) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Food Image
+                  if (item['image_url'] != null && item['image_url'].isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        item['image_url'],
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: double.infinity,
+                            height: 200,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.restaurant, size: 64, color: Colors.grey),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.restaurant, size: 64, color: Colors.grey),
+                    ),
+                  const SizedBox(height: 16),
+                  // Food Name
+                  Text(
+                    item['name'] ?? 'Unknown Food',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Details
+                  _buildDetailRow('Quantity', item['quantity'] ?? 'Not specified'),
+                  _buildDetailRow('Expiry Date', item['expiry_date'] ?? 'Not specified'),
+                  _buildDetailRow('Delivery Type', item['delivary'] ?? 'Pickup'),
+                  if (item['distance'] != null && item['distance'] != double.infinity)
+                    _buildDetailRow('Distance', '${item['distance'].toStringAsFixed(1)} km'),
+                  const SizedBox(height: 20),
+                  // Action Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          // TODO: Implement contact functionality
+                          _showUnimplementedFeature('Contact Donor');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Contact'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          // TODO: Implement request functionality
+                          _showUnimplementedFeature('Request Food');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Request'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
 
   void _showUnimplementedFeature(String featureName) {
     ScaffoldMessenger.of(context).showSnackBar(
