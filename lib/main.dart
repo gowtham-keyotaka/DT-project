@@ -7,6 +7,12 @@ import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:location/location.dart' as location;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:http/http.dart' as http;
 
 const supabaseUrl = 'https://wxsrvwglhxehoxjptuuz.supabase.co';
 const supabaseKey =
@@ -634,18 +640,91 @@ class _HomePageState extends State<HomePage> {
   LatLng _currentPosition = const LatLng(20.5937, 78.9629); // Default to India
   final Set<Marker> _markers = {};
 
+  String? userEmail;
+  String? userPhone;
+
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _loadFoodItemsFromSupabase();
+    _loadUserData(); // Add this line
   }
+
+  Future<void> _loadUserData() async {
+    try {
+      if (widget.userType == 'hotel') {
+        await _loadHotelData();
+      } else if (widget.userType == 'orphanage') {
+        await _loadOrphanageData();
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
+
+  Future<void> _loadHotelData() async {
+    try {
+      // Query hotel table using username
+      final response =
+          await Supabase.instance.client
+              .from('hotel')
+              .select('username, phonenumber')
+              .eq('username', widget.username)
+              .single();
+
+      print('Hotel data response: $response'); // Debug print
+
+      setState(() {
+        userPhone = response['phonenumber'];
+        // Hotels don't have email in your setup, so keep it null
+        userEmail = null;
+      });
+
+      print('Loaded hotel data - Phone: $userPhone'); // Debug print
+    } catch (e) {
+      print('Error loading hotel data: $e');
+    }
+  }
+
+  // Load data from orphanage table
+  Future<void> _loadOrphanageData() async {
+    try {
+      // Query orphanage table using the user ID from UserData
+      final response =
+          await Supabase.instance.client
+              .from('orphanage')
+              .select('user_id, email, phonenumber')
+              .eq('user_id', UserData.userId) // Using the logged in user ID
+              .single();
+
+      print('Orphanage data response: $response'); // Debug print
+
+      setState(() {
+        userEmail = response['email'];
+        userPhone = response['phonenumber'];
+      });
+
+      print(
+        'Loaded orphanage data - Email: $userEmail, Phone: $userPhone',
+      ); // Debug print
+    } catch (e) {
+      print('Error loading orphanage data: $e');
+    }
+  }
+
+  // Update your _onItemTapped method in the _HomePageState class:
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    
 
     switch (index) {
+      case 0:
+        // Home - already handled in _buildBody()
+        break;
       case 1:
         _showUnimplementedFeature('Messages');
         break;
@@ -653,9 +732,58 @@ class _HomePageState extends State<HomePage> {
         _showUnimplementedFeature('History');
         break;
       case 3:
-        _showUnimplementedFeature('Profile');
+        // Navigate to Profile Page
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => ProfilePage(
+                  username: widget.username,
+                  userType: widget.userType,
+                  userEmail: userEmail, // Replace with actual email
+                  phoneNumber: userPhone, // Replace with actual phone
+                ),
+          ),
+        ).then((_) {
+          // Reset the selected index when returning from profile
+          setState(() {
+            _selectedIndex = 0;
+          });
+        });
         break;
     }
+  }
+
+  // Also update your _buildBody method to handle the profile case:
+
+  Widget _buildBody() {
+    // Only show the "Feature coming soon!" for Messages and History tabs
+    if (_selectedIndex == 1 || _selectedIndex == 2) {
+      return const Center(child: Text('Feature coming soon!'));
+    }
+
+    // For Home (index 0) and Profile (index 3), show the map
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: _currentPosition,
+            zoom: 5,
+          ),
+          onMapCreated: (controller) => _mapController = controller,
+          myLocationEnabled: true,
+          myLocationButtonEnabled: true,
+          markers: _markers,
+        ),
+        
+        
+        if (widget.userType == 'hotel' && foodItems.isEmpty)
+          // _buildEmptyHotelView(), // Uncomment when you want to use this
+          if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
+            _orphanageHomeView(),
+      ],
+    );
   }
 
   void _showUnimplementedFeature(String featureName) {
@@ -696,6 +824,205 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Add this method to fetch food items from Supabase
+
+  Future<void> _loadFoodItemsFromSupabase() async {
+    try {
+      final response =
+          await Supabase.instance.client.from('food_items').select();
+
+      print('Supabase response: $response'); // Debug print
+
+      if (response != null) {
+        List<FoodItem> items = [];
+
+        for (var item in response) {
+          print(
+            'Processing item: ${item['name']}, lat: ${item['latitude']}, lng: ${item['longitude']}',
+          ); // Debug print
+
+          items.add(
+            FoodItem(
+              name: item['name'] ?? 'Unknown',
+              expiryDate: item['expiry_date'] ?? '',
+              quantity: item['quantity'] ?? 0,
+              delivary: item['delivary'] ?? '',
+              imageUrl: item['image_url'],
+              latitude: item['latitude']?.toDouble(),
+              longitude: item['longitude']?.toDouble(),
+            ),
+          );
+        }
+
+        setState(() {
+          foodItems = items;
+        });
+        print("_____________________________________________________________");
+        print('Added ${items.length} food items'); // Debug print
+
+        // Add markers for food items
+        _addMarkersForFoodItems();
+      }
+    } catch (e) {
+      print('Error loading food items from Supabase: $e');
+    }
+  }
+
+  // Add this method to create markers for all food items
+  Future<void> _addMarkersForFoodItems() async {
+    // Keep the current location marker but remove all others
+    _markers.removeWhere(
+      (marker) => marker.markerId.value != 'current_location',
+    );
+
+    // Add a marker for each food item with location data
+    for (var item in foodItems) {
+      if (item.latitude != null && item.longitude != null) {
+        await _addFoodItemMarker(item);
+      }
+    }
+  }
+
+  // Add this helper method to get image bytes from URL
+  Future<Uint8List> _getBytesFromUrl(String url) async {
+    final http.Response response = await http.get(Uri.parse(url));
+
+    // Resize image to reasonable size for marker
+    final Uint8List originalBytes = response.bodyBytes;
+    final ui.Codec codec = await ui.instantiateImageCodec(
+      originalBytes,
+      targetWidth: 100,
+      targetHeight: 100,
+    );
+
+    final ui.FrameInfo frameInfo = await codec.getNextFrame();
+    final ByteData? byteData = await frameInfo.image.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+
+    return byteData!.buffer.asUint8List();
+  }
+
+  // Add this method to create a custom marker for a food item
+  Future<void> _addFoodItemMarker(FoodItem item) async {
+    if (item.latitude == null || item.longitude == null) return;
+
+    final LatLng position = LatLng(item.latitude!, item.longitude!);
+    final String markerId = "food_item_${foodItems.indexOf(item)}";
+
+    // Create custom marker icon from image URL
+    BitmapDescriptor markerIcon;
+
+    if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
+      try {
+        // Get image from Supabase URL
+        final Uint8List markerIconBytes = await _getBytesFromUrl(
+          item.imageUrl!,
+        );
+        markerIcon = BitmapDescriptor.fromBytes(markerIconBytes);
+      } catch (e) {
+        print('Error creating marker from image: $e');
+        // Fall back to default food marker
+        markerIcon = BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueOrange,
+        );
+      }
+    } else {
+      // Default food marker
+      markerIcon = BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueOrange,
+      );
+    }
+
+    setState(() {
+      _markers.add(
+        Marker(
+          markerId: MarkerId(markerId),
+          position: position,
+          infoWindow: InfoWindow(
+            title: item.name,
+            snippet: 'Quantity: ${item.quantity}, Expires: ${item.expiryDate}',
+          ),
+          icon: markerIcon,
+          onTap: () {
+            // Show more details when marker is tapped
+            _showFoodItemDetails(item);
+          },
+        ),
+      );
+    });
+  }
+
+  // Add this method to show food item details when marker is tapped
+  void _showFoodItemDetails(FoodItem item) {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text('Quantity: ${item.quantity}'),
+                Text('Expiry Date: ${item.expiryDate}'),
+                Text('Delivery: ${item.delivary}'),
+                if (item.imageUrl != null) ...[
+                  const SizedBox(height: 12),
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        item.imageUrl!,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (ctx, error, _) => const Icon(
+                              Icons.image_not_supported,
+                              size: 100,
+                            ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+    );
+  }
+
+  void addMapPin(
+    double latitude,
+    double longitude, {
+    String title = "Location",
+  }) {
+    final LatLng position = LatLng(latitude, longitude);
+
+    // Create a unique marker ID
+    final String markerId = "marker_${_markers.length}";
+
+    setState(() {
+      _markers.add(
+        Marker(
+          markerId: MarkerId(markerId),
+          position: position,
+          infoWindow: InfoWindow(title: title),
+        ),
+      );
+
+      // Optionally animate camera to the new pin
+      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(position, 15));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -723,30 +1050,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBody() {
-    if (_selectedIndex != 0) {
-      return const Center(child: Text('Feature coming soon!'));
-    }
-
-    return Stack(
-      children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: _currentPosition,
-            zoom: 5,
-          ),
-          onMapCreated: (controller) => _mapController = controller,
-          myLocationEnabled: true,
-          myLocationButtonEnabled: true,
-          markers: _markers,
-        ),
-        if (widget.userType == 'hotel' && foodItems.isEmpty)
-          if (widget.userType == 'orphanage' && foodItems.isNotEmpty)
-            _orphanageHomeView(),
-      ],
-    );
-  }
-
+  /*
   Widget _buildEmptyHotelView() {
     return Center(
       child: Column(
@@ -772,7 +1076,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
+  }*/
 
   Widget _orphanageHomeView() {
     return Positioned(
@@ -789,7 +1093,19 @@ class _HomePageState extends State<HomePage> {
               title: Text(foodItems[index].name),
               subtitle: Text('Quantity: ${foodItems[index].quantity}'),
               onTap: () {
-                // Zoom to food item's location (if available)
+                // Zoom to food item's location if available
+                if (foodItems[index].latitude != null &&
+                    foodItems[index].longitude != null) {
+                  _mapController?.animateCamera(
+                    CameraUpdate.newLatLngZoom(
+                      LatLng(
+                        foodItems[index].latitude!,
+                        foodItems[index].longitude!,
+                      ),
+                      15,
+                    ),
+                  );
+                }
               },
             );
           },
@@ -807,9 +1123,377 @@ class _HomePageState extends State<HomePage> {
     if (newItem != null) {
       setState(() {
         foodItems.add(newItem);
-        // Optionally add a marker for the new item if it has location
       });
+
+      // Add marker for the new food item if it has location data
+      if (newItem.latitude != null && newItem.longitude != null) {
+        await _addFoodItemMarker(newItem);
+      }
     }
+  }
+}
+
+class ProfilePage extends StatelessWidget {
+  final String username;
+  final String userType; // 'hotel' or 'orphanage'
+  final String? userEmail;
+  final String? phoneNumber;
+
+  const ProfilePage({
+    Key? key,
+    required this.username,
+    required this.userType,
+    this.userEmail,
+    this.phoneNumber,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text('Profile'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => _editProfile(context),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header section with gradient background
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.green, Colors.green.shade300],
+                ),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  // Profile Avatar with user type icon
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.white,
+                        child: CircleAvatar(
+                          radius: 55,
+                          backgroundColor: Colors.green.shade100,
+                          child: Icon(
+                            _getUserTypeIcon(),
+                            size: 60,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: _getUserTypeColor(),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: Icon(
+                            _getUserTypeBadgeIcon(),
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Username
+                  Text(
+                    username,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // User type badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      _getUserTypeLabel(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+
+            // Profile Information Cards
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  // Account Information Card
+                  _buildInfoCard(
+                    title: 'Account Information',
+                    children: [
+                      _buildInfoRow(Icons.person, 'Username', username),
+                      _buildInfoRow(
+                        Icons.business,
+                        'Account Type',
+                        _getUserTypeLabel(),
+                      ),
+                      if (userEmail != null)
+                        _buildInfoRow(Icons.email, 'Email', userEmail!),
+                      if (phoneNumber != null)
+                        _buildInfoRow(Icons.phone, 'Phone', phoneNumber!),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Statistics Card (you can customize based on user data)
+                  _buildInfoCard(
+                    title:
+                        userType == 'hotel'
+                            ? 'Donation Statistics'
+                            : 'Received Statistics',
+                    children: [
+                      _buildInfoRow(
+                        userType == 'hotel'
+                            ? Icons.volunteer_activism
+                            : Icons.inventory,
+                        userType == 'hotel'
+                            ? 'Items Donated'
+                            : 'Items Received',
+                        '0', // You can replace with actual data
+                      ),
+                      _buildInfoRow(
+                        Icons.calendar_today,
+                        'Member Since',
+                        '2024', // You can replace with actual join date
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
+                  _buildActionButtons(context),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green.shade700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.green.shade600),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Column(
+      children: [
+        // Edit Profile Button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _editProfile(context),
+            icon: const Icon(Icons.edit),
+            label: const Text('Edit Profile'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Settings Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _openSettings(context),
+            icon: const Icon(Icons.settings),
+            label: const Text('Settings'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.green,
+              side: const BorderSide(color: Colors.green),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // Logout Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout),
+            label: const Text('Logout'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: const BorderSide(color: Colors.red),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getUserTypeIcon() {
+    return userType == 'hotel' ? Icons.hotel : Icons.home;
+  }
+
+  IconData _getUserTypeBadgeIcon() {
+    return userType == 'hotel' ? Icons.restaurant : Icons.favorite;
+  }
+
+  Color _getUserTypeColor() {
+    return userType == 'hotel' ? Colors.blue : Colors.orange;
+  }
+
+  String _getUserTypeLabel() {
+    return userType == 'hotel' ? 'Hotel/Restaurant' : 'Orphanage/NGO';
+  }
+
+  void _editProfile(BuildContext context) {
+    // Navigate to edit profile page
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Edit Profile feature coming soon!')),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    // Navigate to settings page
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Settings feature coming soon!')),
+    );
+  }
+
+  void _logout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Add logout logic here
+                Navigator.of(context).pushReplacementNamed('/login');
+              },
+              child: const Text('Logout'),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -986,6 +1670,12 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
           print(imageUrl);
         }
 
+        Position position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        );
+
         // Insert into Supabase Database
         final response = await Supabase.instance.client
             .from('food_items')
@@ -996,6 +1686,8 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
               'delivary': delevaryController.text,
               'image_url': imageUrl,
               'user_id': user_id,
+              'latitude': position.latitude,
+              'longitude': position.longitude,
             });
         /*
         if (response.error != null) {
@@ -1019,12 +1711,16 @@ class _AddFoodItemPageState extends State<AddFoodItemPage> {
 }
 
 // Food Item Model
+// Food Item Model
 class FoodItem {
   final String name;
   final String expiryDate;
   final int quantity;
   final String delivary;
   final File? image;
+  final String? imageUrl; // Added for the image URL from Supabase
+  final double? latitude; // Added for location data
+  final double? longitude; // Added for location data
 
   FoodItem({
     required this.name,
@@ -1032,6 +1728,9 @@ class FoodItem {
     required this.quantity,
     required this.delivary,
     this.image,
+    this.imageUrl,
+    this.latitude,
+    this.longitude,
   });
 }
 
