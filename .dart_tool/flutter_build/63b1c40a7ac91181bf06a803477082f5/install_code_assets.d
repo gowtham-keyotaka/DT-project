@@ -1,0 +1,1 @@
+ C:\\Users\\gowth\\AndroidStudioProjects\\food_rescue_app\\.dart_tool\\flutter_build\\63b1c40a7ac91181bf06a803477082f5\\native_assets.json: 

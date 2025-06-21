@@ -1,0 +1,310 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example.food_rescue_app"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+11-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:2:1-74
+11-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:2:18-72
+12    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+12-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:3:1-76
+12-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:3:18-74
+13    <uses-permission android:name="android.permission.INTERNET" />
+13-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:4:1-62
+13-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:4:18-60
+14    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+14-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:5:1-74
+14-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:5:18-72
+15
+16    <meta-data
+16-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:6:1-8:62
+17        android:name="com.google.android.geo.API_KEY"
+17-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:7:5-50
+18        android:value="AIzaSyBeGgirRKvC859_FyjEy9l953ZdAQj-tdo" />
+18-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:8:5-60
+19    <!--
+20         Required to query activities that can process text, see:
+21         https://developer.android.com/training/package-visibility and
+22         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+23
+24         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+25    -->
+26    <queries>
+26-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:49:5-54:15
+27        <intent>
+27-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:50:9-53:18
+28            <action android:name="android.intent.action.PROCESS_TEXT" />
+28-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:51:13-72
+28-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:51:21-70
+29
+30            <data android:mimeType="text/plain" />
+30-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:52:13-50
+30-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:52:19-48
+31        </intent>
+32        <!-- Needs to be explicitly declared on Android R+ -->
+33        <package android:name="com.google.android.apps.maps" />
+33-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:33:9-64
+33-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:33:18-61
+34    </queries>
+35
+36    <uses-feature
+36-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:26:5-28:35
+37        android:glEsVersion="0x00020000"
+37-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:27:9-41
+38        android:required="true" />
+38-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:28:9-32
+39
+40    <permission
+40-->[androidx.core:core:1.13.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:22:5-24:47
+41        android:name="com.example.food_rescue_app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+41-->[androidx.core:core:1.13.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:23:9-81
+42        android:protectionLevel="signature" />
+42-->[androidx.core:core:1.13.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:24:9-44
+43
+44    <uses-permission android:name="com.example.food_rescue_app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+44-->[androidx.core:core:1.13.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:26:5-97
+44-->[androidx.core:core:1.13.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
+45
+46    <application
+47        android:name="android.app.Application"
+47-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:12:9-42
+48        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+48-->[androidx.core:core:1.13.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\8cf478dec41eed746328fa8046755ba2\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
+49        android:extractNativeLibs="true"
+50        android:icon="@mipmap/ic_launcher"
+50-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:13:9-43
+51        android:label="food_rescue_app" >
+51-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:11:9-40
+52        <meta-data
+52-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:6:1-8:62
+53            android:name="com.google.android.geo.API_KEY"
+53-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:7:5-50
+54            android:value="AIzaSyBeGgirRKvC859_FyjEy9l953ZdAQj-tdo" />
+54-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:8:5-60
+55
+56        <activity
+56-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:16:9-37:20
+57            android:name="com.example.food_rescue_app.MainActivity"
+57-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:17:13-41
+58            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+58-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:22:13-163
+59            android:exported="true"
+59-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:18:13-36
+60            android:hardwareAccelerated="true"
+60-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:23:13-47
+61            android:launchMode="singleTop"
+61-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:19:13-43
+62            android:taskAffinity=""
+62-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:20:13-36
+63            android:theme="@style/LaunchTheme"
+63-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:21:13-47
+64            android:windowSoftInputMode="adjustResize" >
+64-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:24:13-55
+65
+66            <!--
+67                 Specifies an Android theme to apply to this Activity as soon as
+68                 the Android process has started. This theme is visible to the user
+69                 while the Flutter UI initializes. After that, this theme continues
+70                 to determine the Window background behind the Flutter UI.
+71            -->
+72            <meta-data
+72-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:29:13-32:17
+73                android:name="io.flutter.embedding.android.NormalTheme"
+73-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:30:15-70
+74                android:resource="@style/NormalTheme" />
+74-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:31:15-52
+75
+76            <intent-filter>
+76-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:33:13-36:29
+77                <action android:name="android.intent.action.MAIN" />
+77-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:34:17-68
+77-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:34:25-66
+78
+79                <category android:name="android.intent.category.LAUNCHER" />
+79-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:35:17-76
+79-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:35:27-74
+80            </intent-filter>
+81        </activity>
+82        <!--
+83             Don't delete the meta-data below.
+84             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+85        -->
+86        <meta-data
+86-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:40:9-42:33
+87            android:name="flutterEmbedding"
+87-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:41:13-44
+88            android:value="2" />
+88-->C:\Users\gowth\AndroidStudioProjects\food_rescue_app\android\app\src\main\AndroidManifest.xml:42:13-30
+89
+90        <service
+90-->[:location] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\location\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:9-15:56
+91            android:name="com.lyokone.location.FlutterLocationService"
+91-->[:location] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\location\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:12:13-71
+92            android:enabled="true"
+92-->[:location] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\location\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:13:13-35
+93            android:exported="false"
+93-->[:location] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\location\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:14:13-37
+94            android:foregroundServiceType="location" />
+94-->[:location] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\location\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:15:13-53
+95        <service
+95-->[:geolocator_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\geolocator_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:9-12:56
+96            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+96-->[:geolocator_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\geolocator_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-77
+97            android:enabled="true"
+97-->[:geolocator_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\geolocator_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-35
+98            android:exported="false"
+98-->[:geolocator_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\geolocator_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-37
+99            android:foregroundServiceType="location" />
+99-->[:geolocator_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\geolocator_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:12:13-53
+100
+101        <provider
+101-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:9-17:20
+102            android:name="io.flutter.plugins.imagepicker.ImagePickerFileProvider"
+102-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-82
+103            android:authorities="com.example.food_rescue_app.flutter.image_provider"
+103-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-74
+104            android:exported="false"
+104-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:12:13-37
+105            android:grantUriPermissions="true" >
+105-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:13:13-47
+106            <meta-data
+106-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:14:13-16:75
+107                android:name="android.support.FILE_PROVIDER_PATHS"
+107-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:15:17-67
+108                android:resource="@xml/flutter_image_picker_file_paths" />
+108-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:16:17-72
+109        </provider> <!-- Trigger Google Play services to install the backported photo picker module. -->
+110        <service
+110-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:19:9-31:19
+111            android:name="com.google.android.gms.metadata.ModuleDependencies"
+111-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:20:13-78
+112            android:enabled="false"
+112-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:21:13-36
+113            android:exported="false" >
+113-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:22:13-37
+114            <intent-filter>
+114-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:24:13-26:29
+115                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+115-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:25:17-94
+115-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:25:25-91
+116            </intent-filter>
+117
+118            <meta-data
+118-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:28:13-30:36
+119                android:name="photopicker_activity:0:required"
+119-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:29:17-63
+120                android:value="" />
+120-->[:image_picker_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\image_picker_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:30:17-33
+121        </service>
+122
+123        <activity
+123-->[:url_launcher_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:8:9-11:74
+124            android:name="io.flutter.plugins.urllauncher.WebViewActivity"
+124-->[:url_launcher_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:9:13-74
+125            android:exported="false"
+125-->[:url_launcher_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:10:13-37
+126            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" /> <!-- Needs to be explicitly declared on P+ -->
+126-->[:url_launcher_android] C:\Users\gowth\AndroidStudioProjects\food_rescue_app\build\url_launcher_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:11:13-71
+127        <uses-library
+127-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:39:9-41:40
+128            android:name="org.apache.http.legacy"
+128-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:40:13-50
+129            android:required="false" />
+129-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\223e4c2782dceb65140338abe6972c59\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:41:13-37
+130
+131        <activity
+131-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\f6fa56a75284f8e0ea5d27971291f441\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+132            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+132-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\f6fa56a75284f8e0ea5d27971291f441\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+133            android:exported="false"
+133-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\f6fa56a75284f8e0ea5d27971291f441\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+134            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+134-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\f6fa56a75284f8e0ea5d27971291f441\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+135
+136        <meta-data
+136-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5568a35fadd1ad6d1c703f16a16e5540\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+137            android:name="com.google.android.gms.version"
+137-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5568a35fadd1ad6d1c703f16a16e5540\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+138            android:value="@integer/google_play_services_version" />
+138-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5568a35fadd1ad6d1c703f16a16e5540\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+139
+140        <uses-library
+140-->[androidx.window:window:1.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:23:9-25:40
+141            android:name="androidx.window.extensions"
+141-->[androidx.window:window:1.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:24:13-54
+142            android:required="false" />
+142-->[androidx.window:window:1.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:25:13-37
+143        <uses-library
+143-->[androidx.window:window:1.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:26:9-28:40
+144            android:name="androidx.window.sidecar"
+144-->[androidx.window:window:1.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:27:13-51
+145            android:required="false" />
+145-->[androidx.window:window:1.2.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5093ab42d2307deb2d7ac0b7f5718c38\transformed\jetified-window-1.2.0\AndroidManifest.xml:28:13-37
+146
+147        <provider
+147-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:24:9-32:20
+148            android:name="androidx.startup.InitializationProvider"
+148-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:25:13-67
+149            android:authorities="com.example.food_rescue_app.androidx-startup"
+149-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:26:13-68
+150            android:exported="false" >
+150-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:27:13-37
+151            <meta-data
+151-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+152                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+152-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+153                android:value="androidx.startup" />
+153-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\gowth\.gradle\caches\8.10.2\transforms\e80aa748ff6540407d8dba61c0d945fe\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+154            <meta-data
+154-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+155                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+155-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+156                android:value="androidx.startup" />
+156-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+157        </provider>
+158
+159        <receiver
+159-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+160            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+160-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+161            android:directBootAware="false"
+161-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+162            android:enabled="true"
+162-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+163            android:exported="true"
+163-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+164            android:permission="android.permission.DUMP" >
+164-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+165            <intent-filter>
+165-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+166                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+166-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+166-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+167            </intent-filter>
+168            <intent-filter>
+168-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+169                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+169-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+169-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+170            </intent-filter>
+171            <intent-filter>
+171-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+172                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+172-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+172-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+173            </intent-filter>
+174            <intent-filter>
+174-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+175                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+175-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+175-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\gowth\.gradle\caches\8.10.2\transforms\5f7dcf6815bacc3ae7f099ba801348de\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+176            </intent-filter>
+177        </receiver>
+178    </application>
+179
+180</manifest>
